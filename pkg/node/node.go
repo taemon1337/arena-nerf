@@ -2,6 +2,8 @@ package node
 
 import (
   "log"
+  "fmt"
+  "time"
   "errors"
 
   "github.com/hashicorp/serf/cmd/serf/command/agent"
@@ -10,6 +12,8 @@ import (
 
 var (
   ERR_INVALID_CONFIG = errors.New("invalid node config")
+  EVENT_ALIVE = "alive"
+  COALESCE = true
 )
 
 type Node struct {
@@ -24,8 +28,12 @@ func NewNode(cfg *config.Config) *Node {
   }
 }
 
+func (n *Node) Name() string {
+  return n.conf.AgentConf.NodeName
+}
+
 func (n *Node) Start() error {
-  if n.conf.NodeName == "" {
+  if n.conf.AgentConf.NodeName == "" {
     return ERR_INVALID_CONFIG
   }
 
@@ -39,5 +47,20 @@ func (n *Node) Start() error {
   n.agent = a
   log.Printf("starting serf agent.")
 
-  return n.agent.Start()
+  err = n.agent.Start()
+  if err != nil {
+    return errors.New(fmt.Sprintf("cannot start node - %s", err))
+  }
+
+  for {
+    select {
+      case <-time.After(10 * time.Second):
+        err := n.agent.UserEvent(EVENT_ALIVE, []byte(fmt.Sprintf("%s: I am alive!", n.Name())), COALESCE)
+        if err != nil {
+          log.Printf("cannot send alive event: %s", err)
+        }
+    }
+  }
+
+  return nil
 }

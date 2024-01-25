@@ -9,16 +9,19 @@ import (
 )
 
 type Config struct {
-  NodeName        string          `yaml:"node_name" json:"node_name"`
   AgentConf       *agent.Config   `yaml:"agent_conf" json:"agent_conf"`
   SerfConf        *serf.Config    `yaml:"serf_conf" json:"serf_conf"`
 }
 
 func NewConfig() *Config {
+  ac := agent.DefaultConfig()
+  sc := serf.DefaultConfig()
+
+  ac.NodeName = GetHostname()
+
   return &Config{
-    NodeName: GetHostname(),
-    AgentConf:  agent.DefaultConfig(),
-    SerfConf:   serf.DefaultConfig(),
+    AgentConf:  ac,
+    SerfConf:   sc,
   }
 }
 
