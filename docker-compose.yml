@@ -1,22 +1,34 @@
 version: "3"
 services:
+  ctrl:
+    image: taemon1337/serf-cluster:0.0.1
+    command:
+      - "-role"
+      - "ctrl"
+    networks:
+      serf:
+        ipv4_address: 172.20.100.11
   node1:
     image: taemon1337/serf-cluster:0.0.1
     networks:
       serf:
         ipv4_address: 172.20.100.1
+    environment:
+      - SERF_NAME=node1
   node2:
     image: taemon1337/serf-cluster:0.0.1
     command:
+      - "-name"
+      - "node2"
       - "-join"
-      - "172.20.100.1"
+      - "172.20.100.11"
     networks:
       serf:
         ipv4_address: 172.20.100.2
   node3:
     image: taemon1337/serf-cluster:0.0.1
     environment:
-      - SERF_JOIN_ADDRS=172.20.100.1
+      - SERF_JOIN_ADDRS=172.20.100.11
     networks:
       serf:
         ipv4_address: 172.20.100.3

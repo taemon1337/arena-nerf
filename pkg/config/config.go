@@ -12,19 +12,23 @@ import (
 type Config struct {
   AgentConf       *agent.Config   `yaml:"agent_conf" json:"agent_conf"`
   SerfConf        *serf.Config    `yaml:"serf_conf" json:"serf_conf"`
-  JoinAddrs       JoinAddrList    `yaml:"join_addrs" json:"join_addrs"`
+  JoinAddrs       []string        `yaml:"join_addrs" json:"join_addrs"`
   JoinReplay      bool            `yaml:"join_replay" json:"join_replay"`
 }
 
-func NewConfig() *Config {
+func NewConfig(role string) *Config {
   ac := agent.DefaultConfig()
   sc := serf.DefaultConfig()
   joinaddrs := Getenv("SERF_JOIN_ADDRS", "127.0.0.1")
   joinreplay := Getenv("SERF_JOIN_REPLAY", "") // default is false, set to 'true|True|TRUE' otherwise
-  ac.NodeName = Getenv("SERF_HOSTNAME", GetHostname())
+  ac.NodeName = Getenv("SERF_NAME", GetHostname())
   ac.BindAddr = Getenv("SERF_BIND_ADDR", "")
   ac.AdvertiseAddr = Getenv("SERF_ADVERTISE_ADDR", "")
   ac.EncryptKey = Getenv("SERF_ENCRYPT_KEY", "")
+  ac.Tags["role"] = role // role is stored as tag
+
+  sc.Tags = ac.Tags
+  sc.NodeName = ac.NodeName
 
   return &Config{
     AgentConf:  ac,
