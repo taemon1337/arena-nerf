@@ -13,7 +13,8 @@ import (
 var (
   ERR_INVALID_CONFIG = errors.New("invalid node config")
   EVENT_ALIVE = "alive"
-  COALESCE = true
+  COALESCE = false
+  WAIT_TIME = 10 * time.Second
 )
 
 type Node struct {
@@ -54,7 +55,7 @@ func (n *Node) Start() error {
 
   for {
     select {
-      case <-time.After(10 * time.Second):
+      case <-time.After(WAIT_TIME):
         err := n.agent.UserEvent(EVENT_ALIVE, []byte(fmt.Sprintf("%s: I am alive!", n.Name())), COALESCE)
         if err != nil {
           log.Printf("cannot send alive event: %s", err)

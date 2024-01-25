@@ -1,0 +1,30 @@
+version: "3"
+services:
+  node1:
+    image: taemon1337/serf-cluster:0.0.1
+    networks:
+      serf:
+        ipv4_address: 172.20.100.1
+  node2:
+    image: taemon1337/serf-cluster:0.0.1
+    command:
+      - "-join"
+      - "172.20.100.1"
+    networks:
+      serf:
+        ipv4_address: 172.20.100.2
+  node3:
+    image: taemon1337/serf-cluster:0.0.1
+    environment:
+      - SERF_JOIN_ADDRS=172.20.100.1
+    networks:
+      serf:
+        ipv4_address: 172.20.100.3
+networks:
+  serf:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.20.0.0/16
+        gateway: 172.20.0.1
