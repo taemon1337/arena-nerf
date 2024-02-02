@@ -7,17 +7,23 @@ import (
 
   "github.com/hashicorp/serf/serf"
 
+  "github.com/taemon1337/serf-cluster/pkg/game"
   "github.com/taemon1337/serf-cluster/pkg/config"
+  "github.com/taemon1337/serf-cluster/pkg/constants"
   "github.com/taemon1337/serf-cluster/pkg/connector"
 )
 
 type Controller struct {
   conn        *connector.Connector
+  conf        *config.Config
+  game        *game.GameEngine
 }
 
-func NewController(cfg *config.Config) *Controller {
+func NewController(cfg *config.Config, ge *game.GameEngine) *Controller {
   return &Controller{
     conn:     connector.NewConnector(cfg),
+    conf:     cfg,
+    game:     ge,
   }
 }
 
@@ -37,30 +43,34 @@ func (c *Controller) Start() error {
   })
 
   g.Go(func () error {
-    return c.Listen()
+    return c.ListenToGameEvents()
+  })
+
+  g.Go(func () error {
+    return c.game.Run(c.conf.ExpectNodes, c.conf.Timeout)
   })
 
   return g.Wait()
 }
 
-func (c *Controller) Listen() error {
+func (c *Controller) ListenToGameEvents() error {
   for {
     select {
-      case <-time.After(config.WAIT_TIME):
-        for _, member := range c.conn.Serf().Members() {
-          log.Printf("%s: status=%s, ip=%s, tags=%s", member.Name, member.Status, member.Addr, member.Tags)
-        }
-        resp, err := c.conn.Query("echo", []byte("ping"), nil)
+      case e := <-c.game.EventChan:
+        err := c.conn.UserEvent(e.EventName, e.Payload, constants.COALESCE)
         if err != nil {
-          log.Printf("Query Error: %s", err)
-          continue
+          log.Printf("could not send game event %s: %s", e.EventName, err)
         }
-
-        log.Printf("Query Response: %s", resp)
-
+      case q := <-c.game.QueryChan:
+        data := map[string][]byte{}
+        resp, err := c.conn.Query(q.Query, q.Payload, &serf.QueryParam{FilterTags: q.Tags})
+        if err != nil {
+          q.Response <- game.NewGameQueryResponse(data, err)
+        }
         for r := range resp.ResponseCh() {
-          log.Printf("Response from %s: %s", r.From, r.Payload)
+          data[r.From] = r.Payload
         }
+        q.Response <- game.NewGameQueryResponse(data, err)
     }
   }
 }

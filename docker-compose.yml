@@ -24,6 +24,8 @@ services:
     command:
       - "-role"
       - "node"
+      - "-name"
+      - "node1"
       - "-join"
       - "172.20.100.11"
     depends_on:

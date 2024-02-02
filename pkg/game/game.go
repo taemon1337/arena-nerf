@@ -3,58 +3,8 @@ package game
 import (
   "log"
   "time"
-  "github.com/hashicorp/serf/serf"
+  "github.com/taemon1337/serf-cluster/pkg/constants"
 )
-
-var (
-  GAME_START = "game:start"
-  GAME_STOP = "game:stop"
-  GAME_MODE = "game:mode"
-  HITS_TOTAL = "hits:total"
-  NODE_WINNER = "node:winner"
-  NODE_READY = "node:ready"
-  NODE_TAGS = map[string]string{"role": "node"}
-)
-
-type GameEvent struct {
-  EventName       string        `yaml:"event" json:"event"`
-  Payload         []byte        `yaml:"payload" json:"payload"`
-}
-
-type GameQueryResponse struct {
-  Answer          *serf.QueryResponse
-  Error           error
-}
-
-type GameQuery struct {
-  Query           string                  `yaml:"query" json:"query"`
-  Payload         []byte                  `yaml:"payload" json:"payload"`
-  Tags            map[string]string       `yaml:"tags" json:"tags"`
-  Response        chan GameQueryResponse  `yaml:"-" json:"-"`
-}
-
-func NewGameEvent(event string, payload []byte) GameEvent {
-  return GameEvent{
-    EventName: event,
-    Payload:   payload,
-  }
-}
-
-func NewGameQuery(query string, payload []byte, tags map[string]string) GameQuery {
-  return GameQuery{
-    Query:     query,
-    Payload:   payload,
-    Tags:      tags,
-    Response:  make(chan GameQueryResponse, 0),
-  }
-}
-
-func NewGameQueryResponse(resp *serf.QueryResponse, err error) GameQueryResponse {
-  return GameQueryResponse{
-    Answer:   resp,
-    Error:    err,
-  }
-}
 
 type GameController struct {
   Name            string
@@ -74,34 +24,35 @@ func NewGameEngine(name string) *GameEngine {
   }
 }
 
-func (ge *GameEngine) Start() error {
-  return ge.SendEvent(NewGameEvent(GAME_START, []byte("Let the game begin!")))
-}
-
-func (ge *GameEngine) Stop() error {
-  return ge.SendEvent(NewGameEvent(GAME_STOP, []byte("Stop the game!")))
-}
-
 func (ge *GameEngine) SendEvent(e GameEvent) error {
   ge.EventChan <- e
   return nil
 }
 
-func (ge *GameEngine) SendQuery(q GameQuery) ([]interface{}, error) {
+func (ge *GameEngine) SendQuery(q GameQuery) (map[string][]byte, error) {
   ge.QueryChan <- q
-  return nil, nil
+  resp := <-q.Response // block for response
+  return resp.Answer, resp.Error
 }
 
 func (ge *GameEngine) WaitForNodes(expect int, timeout int) error {
   for {
     // wait for ready
-    resp, err := ge.SendQuery(NewGameQuery(NODE_READY, []byte(""), NODE_TAGS))
+    resp, err := ge.SendQuery(NewGameQuery(constants.NODE_READY, []byte(""), constants.NODE_TAGS))
     if err != nil {
       log.Printf("error query readiness of nodes: %s", err)
       return err
     }
 
-    if len(resp) >= expect {
+    readycount := 0
+
+    for _, val := range resp {
+      if string(val) == constants.NODE_IS_READY {
+        readycount += 1
+      }
+    }
+
+    if readycount >= expect {
       log.Printf("nodes ready: %d", len(resp))
       break // got expected amount node responses indicating readiness
     } else {
@@ -122,6 +73,7 @@ func (ge *GameEngine) WaitForNodes(expect int, timeout int) error {
 func (ge *GameEngine) Run(expect, timeout int) error {
 
   // wait for nodes to be ready
+  log.Printf("waiting for %d nodes", expect)
   err := ge.WaitForNodes(expect, timeout)
   if err != nil {
     return err
@@ -129,12 +81,24 @@ func (ge *GameEngine) Run(expect, timeout int) error {
 
   // set game mode
   log.Printf("setting game mode")
-  if err = ge.SendEvent(NewGameEvent(GAME_MODE, []byte("domination"))); err != nil {
+  if err = ge.SendEvent(NewGameEvent(constants.GAME_MODE, []byte(constants.GAME_MODE_DOMINATION))); err != nil {
     return err
   }
 
+  resp, err := ge.SendQuery(NewGameQuery(constants.GAME_MODE, []byte(""), constants.NODE_TAGS))
+  if err != nil {
+    log.Printf("error querying game node: %s", err)
+    return err
+  }
+
+  for node, val := range resp {
+    if string(val) != constants.GAME_MODE_DOMINATION {
+      log.Printf("node %s game mode was set to %s, not %s", node, val, constants.GAME_MODE_DOMINATION)
+    }
+  }
+
   // start game
-  if err := ge.Start(); err != nil {
+  if err := ge.SendEvent(NewGameEvent(constants.GAME_ACTION_BEGIN, []byte("Let the game begin!"))); err != nil {
     return err
   }
 
@@ -143,5 +107,10 @@ func (ge *GameEngine) Run(expect, timeout int) error {
   for {
     time.Sleep(10 * time.Second)
   }
+
+  if err := ge.SendEvent(NewGameEvent(constants.GAME_ACTION_END, []byte("The game is over!"))); err != nil {
+    return nil
+  }
+
   return nil
 }

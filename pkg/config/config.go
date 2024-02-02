@@ -3,22 +3,10 @@ package config
 import (
   "os"
   "log"
-  "time"
   "strings"
-  "errors"
 
   "github.com/hashicorp/serf/serf"
   "github.com/hashicorp/serf/cmd/serf/command/agent"
-)
-
-var (
-  TAG_ROLE_NODE = "node"
-  TAG_ROLE_CTRL = "ctrl"
-  ERR_INVALID_CONFIG = errors.New("invalid node config")
-  ERR_NOT_CONNECTED = errors.New("agent not connected")
-  EVENT_ALIVE = "alive"
-  COALESCE = false
-  WAIT_TIME = 10 * time.Second
 )
 
 type Config struct {
@@ -26,6 +14,8 @@ type Config struct {
   SerfConf        *serf.Config    `yaml:"serf_conf" json:"serf_conf"`
   JoinAddrs       []string        `yaml:"join_addrs" json:"join_addrs"`
   JoinReplay      bool            `yaml:"join_replay" json:"join_replay"`
+  ExpectNodes     int             `yaml:"expect_nodes" json:"expect_nodes"`
+  Timeout         int             `yaml:"timeout" json:"timeout"`
 }
 
 func NewConfig(role string) *Config {
@@ -43,10 +33,12 @@ func NewConfig(role string) *Config {
   sc.NodeName = ac.NodeName
 
   return &Config{
-    AgentConf:  ac,
-    SerfConf:   sc,
-    JoinAddrs:  strings.Split(joinaddrs, ","),
-    JoinReplay: (joinreplay == "true" || joinreplay == "True" || joinreplay == "TRUE"),
+    AgentConf:    ac,
+    SerfConf:     sc,
+    JoinAddrs:    strings.Split(joinaddrs, ","),
+    JoinReplay:   (joinreplay == "true" || joinreplay == "True" || joinreplay == "TRUE"),
+    ExpectNodes:  3,
+    Timeout:      10,
   }
 }
 
