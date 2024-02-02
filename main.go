@@ -5,7 +5,7 @@ import (
   "fmt"
   "flag"
 
-  "github.com/taemon1337/serf-cluster/pkg/node-v2"
+  "github.com/taemon1337/serf-cluster/pkg/node"
   "github.com/taemon1337/serf-cluster/pkg/config"
   "github.com/taemon1337/serf-cluster/pkg/controller"
 )

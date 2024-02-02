@@ -50,6 +50,17 @@ func (c *Controller) Listen() error {
         for _, member := range c.conn.Serf().Members() {
           log.Printf("%s: status=%s, ip=%s, tags=%s", member.Name, member.Status, member.Addr, member.Tags)
         }
+        resp, err := c.conn.Query("echo", []byte("ping"), nil)
+        if err != nil {
+          log.Printf("Query Error: %s", err)
+          continue
+        }
+
+        log.Printf("Query Response: %s", resp)
+
+        for r := range resp.ResponseCh() {
+          log.Printf("Response from %s: %s", r.From, r.Payload)
+        }
     }
   }
 }

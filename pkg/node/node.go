@@ -53,6 +53,11 @@ func (n *Node) HandleEvent(e serf.Event) {
     log.Printf("EVENT: %s", e)
   }
   if e.EventType() == serf.EventQuery {
-    log.Printf("QUERY: %s", e)
+    q := e.(*serf.Query)
+    log.Printf("QUERY: %s", q)
+    err := q.Respond([]byte("pong"))
+    if err != nil {
+      log.Printf("Error responding to query '%s': %s", q, err)
+    }
   }
 }

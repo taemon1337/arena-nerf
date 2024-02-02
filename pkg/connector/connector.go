@@ -75,6 +75,10 @@ func (c *Connector) Join() error {
   }
 }
 
+func (c *Connector) Query(name string, payload []byte, params *serf.QueryParam) (*serf.QueryResponse, error) {
+  return c.agent.Query(name, payload, params)
+}
+
 func (c *Connector) RegisterEventHandler(eh agent.EventHandler) {
   c.agent.RegisterEventHandler(eh)
 }
