@@ -5,6 +5,10 @@ services:
     command:
       - "-role"
       - "ctrl"
+      - "-mode"
+      - "domination"
+      - "-expect"
+      - "3"
     networks:
       serf:
         ipv4_address: 172.20.100.11
@@ -15,6 +19,8 @@ services:
         ipv4_address: 172.20.100.1
     environment:
       - SERF_NAME=node1
+    depends_on:
+      - ctrl
   node2:
     image: taemon1337/serf-cluster:0.0.1
     command:
@@ -22,16 +28,23 @@ services:
       - "node2"
       - "-join"
       - "172.20.100.11"
+    environment:
+      - SERF_NAME=node2
     networks:
       serf:
         ipv4_address: 172.20.100.2
+    depends_on:
+      - ctrl
   node3:
     image: taemon1337/serf-cluster:0.0.1
     environment:
+      - SERF_NAME=node3
       - SERF_JOIN_ADDRS=172.20.100.11
     networks:
       serf:
         ipv4_address: 172.20.100.3
+    depends_on:
+      - ctrl
 networks:
   serf:
     driver: bridge
