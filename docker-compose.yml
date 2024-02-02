@@ -3,12 +3,16 @@ services:
   ctrl:
     image: taemon1337/serf-cluster:0.0.1
     command:
+      - "-name"
+      - "control"
       - "-role"
       - "ctrl"
       - "-mode"
       - "domination"
       - "-expect"
       - "3"
+      - "-tag"
+      - "role=ctrl"
     networks:
       serf:
         ipv4_address: 172.20.100.11
@@ -17,8 +21,11 @@ services:
     networks:
       serf:
         ipv4_address: 172.20.100.1
-    environment:
-      - SERF_NAME=node1
+    command:
+      - "-role"
+      - "node"
+      - "-join"
+      - "172.20.100.11"
     depends_on:
       - ctrl
   node2:
@@ -26,10 +33,10 @@ services:
     command:
       - "-name"
       - "node2"
+      - "-role"
+      - "node"
       - "-join"
       - "172.20.100.11"
-    environment:
-      - SERF_NAME=node2
     networks:
       serf:
         ipv4_address: 172.20.100.2
@@ -39,6 +46,7 @@ services:
     image: taemon1337/serf-cluster:0.0.1
     environment:
       - SERF_NAME=node3
+      - SERF_ROLE=node
       - SERF_JOIN_ADDRS=172.20.100.11
     networks:
       serf:

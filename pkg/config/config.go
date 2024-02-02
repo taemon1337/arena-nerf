@@ -3,10 +3,22 @@ package config
 import (
   "os"
   "log"
+  "time"
   "strings"
+  "errors"
 
   "github.com/hashicorp/serf/serf"
   "github.com/hashicorp/serf/cmd/serf/command/agent"
+)
+
+var (
+  TAG_ROLE_NODE = "node"
+  TAG_ROLE_CTRL = "ctrl"
+  ERR_INVALID_CONFIG = errors.New("invalid node config")
+  ERR_NOT_CONNECTED = errors.New("agent not connected")
+  EVENT_ALIVE = "alive"
+  COALESCE = false
+  WAIT_TIME = 10 * time.Second
 )
 
 type Config struct {
@@ -25,7 +37,7 @@ func NewConfig(role string) *Config {
   ac.BindAddr = Getenv("SERF_BIND_ADDR", "")
   ac.AdvertiseAddr = Getenv("SERF_ADVERTISE_ADDR", "")
   ac.EncryptKey = Getenv("SERF_ENCRYPT_KEY", "")
-  ac.Tags["role"] = role // role is stored as tag
+  ac.Tags["role"] = Getenv("SERF_ROLE", role) // role is stored as tag
 
   sc.Tags = ac.Tags
   sc.NodeName = ac.NodeName

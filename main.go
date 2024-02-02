@@ -5,22 +5,20 @@ import (
   "fmt"
   "flag"
 
-  "golang.org/x/sync/errgroup"
-
-  "github.com/taemon1337/serf-cluster/pkg/node"
-  "github.com/taemon1337/serf-cluster/pkg/game"
+  "github.com/taemon1337/serf-cluster/pkg/node-v2"
   "github.com/taemon1337/serf-cluster/pkg/config"
+  "github.com/taemon1337/serf-cluster/pkg/controller"
 )
 
 func main() {
-  cfg := config.NewConfig(node.TAG_ROLE_NODE)
+  cfg := config.NewConfig(config.TAG_ROLE_NODE)
   var tags []string
   var role string
   var mode string
   var expect int
   var timeout int
 
-  flag.StringVar(&role, "role", cfg.AgentConf.Tags["role"], fmt.Sprintf("set node role to %s or %s", node.TAG_ROLE_NODE, node.TAG_ROLE_CTRL))
+  flag.StringVar(&role, "role", cfg.AgentConf.Tags["role"], fmt.Sprintf("set node role to %s or %s", config.TAG_ROLE_NODE, config.TAG_ROLE_CTRL))
   flag.StringVar(&cfg.AgentConf.NodeName, "name", cfg.AgentConf.NodeName, "name of this node in the cluster")
   flag.StringVar(&cfg.AgentConf.BindAddr, "bind", cfg.AgentConf.BindAddr, "address to bind listeners to")
   flag.StringVar(&cfg.AgentConf.AdvertiseAddr, "advertise", cfg.AgentConf.AdvertiseAddr, "address to advertise to cluster")
@@ -38,34 +36,21 @@ func main() {
   }
 
   cfg.AgentConf.Tags = parsedtags
-  cfg.AgentConf.Tags["role"] = role
-
-  n, err := node.NewNode(cfg)
-  if err != nil {
-    log.Fatal(err)
+  if role != "" {
+    cfg.AgentConf.Tags["role"] = role
+  } else {
+    role = cfg.AgentConf.Tags["role"]
   }
 
-  g := new(errgroup.Group)
+  log.Printf("Node: %s", cfg.AgentConf.NodeName)
+  log.Printf("Role: %s", role)
+  log.Printf("Join: %s", cfg.JoinAddrs)
 
-  g.Go(func() error {
-    return n.Start()
-  })
-
-  g.Go(func() error {
-    return n.AutoJoin()
-  })
-
-  if mode != "" {
-    n.AttachGameEngine(game.NewGameEngine(mode))
-
-    g.Go(func() error {
-      return n.ListenGameEngine()
-    })
-
-    g.Go(func() error {
-      return n.RunGameEngine(expect, timeout)
-    })
+  if role == config.TAG_ROLE_CTRL {
+    log.Fatal(controller.NewController(cfg).Start())
+  } else if role == config.TAG_ROLE_NODE {
+    log.Fatal(node.NewNode(cfg).Start())
+  } else {
+    log.Fatal("invalid role")
   }
-
-  log.Fatal(g.Wait())
 }
