@@ -79,6 +79,12 @@ func (ge *GameEngine) Run(expect, timeout int) error {
     return err
   }
 
+  // send all teams to nodes
+  log.Printf("setting game teams")
+  if err = ge.SendEvent(NewGameEvent(constants.TEAM_ADD, []byte(""))); err != nil {
+    return err
+  }
+
   // query all nodes game mode
   resp, err := ge.SendQuery(NewGameQuery(constants.GAME_MODE, []byte(""), constants.NODE_TAGS))
   if err != nil {

@@ -28,6 +28,10 @@ var (
   GAME_STATE_ACTIVE = "game:active"
   GAME_STATE_OVER = "game:over"
 
+  // team
+  TEAM_ADD = "team:add"
+  TEAM_DEL = "team:del"
+
   NODE_HIT = "node:hit"
   TEAM_HIT = "team:hit"
 

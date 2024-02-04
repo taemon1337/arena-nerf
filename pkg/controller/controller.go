@@ -3,6 +3,7 @@ package controller
 import (
   "log"
   "time"
+  "strings"
   "golang.org/x/sync/errgroup"
 
   "github.com/hashicorp/serf/serf"
@@ -57,7 +58,14 @@ func (c *Controller) ListenToGameEvents() error {
   for {
     select {
       case e := <-c.game.EventChan:
-        err := c.conn.UserEvent(e.EventName, e.Payload, constants.COALESCE)
+        var err error = nil
+        switch e.EventName {
+          case constants.TEAM_ADD:
+            // inject teams from config into event
+            err = c.conn.UserEvent(e.EventName, []byte(strings.Join(c.conf.Teams, constants.SPLIT)), constants.COALESCE)
+          default:
+            err = c.conn.UserEvent(e.EventName, e.Payload, constants.COALESCE)
+        }
         if err != nil {
           log.Printf("could not send game event %s: %s", e.EventName, err)
         }

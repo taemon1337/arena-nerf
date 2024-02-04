@@ -26,6 +26,7 @@ func main() {
   flag.Var((*config.AppendSliceValue)(&tags), "tag", "add tag to node with key=value")
   flag.Var((*config.AppendSliceValue)(&cfg.JoinAddrs), "join", "addresses to try to join automatically and repeatable until success")
   flag.StringVar(&mode, "mode", "", "set to the desired game mode to run a game from this node (must be a control node)")
+  flag.Var((*config.AppendSliceValue)(&cfg.Teams), "team", "register/add a team name")
   flag.IntVar(&cfg.ExpectNodes, "expect", cfg.ExpectNodes, "set to the expected number of game nodes (not including control node) to wait for before starting the game")
   flag.IntVar(&cfg.Timeout, "wait", cfg.Timeout, "set the default number of seconds to timeout and/or wait for nodes")
   flag.Parse()

@@ -20,6 +20,7 @@ type Node struct {
   mode          string
   state         string
   hits          map[string]int
+  teams         map[string]string
 }
 
 func NewNode(cfg *config.Config) *Node {
@@ -28,6 +29,7 @@ func NewNode(cfg *config.Config) *Node {
     mode:     constants.GAME_MODE_NONE,
     state:    constants.GAME_STATE_INIT,
     hits:     map[string]int{constants.TAG_ROLE_NODE: 0},
+    teams:    map[string]string{},
   }
 }
 
@@ -89,6 +91,14 @@ func (n *Node) HandleEvent(evt serf.Event) {
             log.Printf("cannot parse team hit from %s - %s", string(e.Payload), err)
           } else {
             n.hits[parts[0]] += hits
+          }
+        }
+      case constants.TEAM_ADD:
+        teams := strings.Split(string(e.Payload), constants.SPLIT)
+        for _, team := range teams {
+          if _, ok := n.teams[team]; !ok {
+            log.Printf("adding team %s", team)
+            n.teams[team] = "" // only add team if it doesn't exist
           }
         }
       case constants.GAME_ACTION_RESET:

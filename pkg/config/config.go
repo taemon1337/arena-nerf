@@ -13,6 +13,7 @@ type Config struct {
   AgentConf       *agent.Config   `yaml:"agent_conf" json:"agent_conf"`
   SerfConf        *serf.Config    `yaml:"serf_conf" json:"serf_conf"`
   JoinAddrs       []string        `yaml:"join_addrs" json:"join_addrs"`
+  Teams           []string        `yaml:"teams" json:"teams"`
   JoinReplay      bool            `yaml:"join_replay" json:"join_replay"`
   ExpectNodes     int             `yaml:"expect_nodes" json:"expect_nodes"`
   Timeout         int             `yaml:"timeout" json:"timeout"`
@@ -23,6 +24,7 @@ func NewConfig(role string) *Config {
   sc := serf.DefaultConfig()
   joinaddrs := Getenv("SERF_JOIN_ADDRS", "127.0.0.1")
   joinreplay := Getenv("SERF_JOIN_REPLAY", "") // default is false, set to 'true|True|TRUE' otherwise
+  teams := Getenv("TEAMS", "")
   ac.NodeName = Getenv("SERF_NAME", GetHostname())
   ac.BindAddr = Getenv("SERF_BIND_ADDR", "")
   ac.AdvertiseAddr = Getenv("SERF_ADVERTISE_ADDR", "")
@@ -37,6 +39,7 @@ func NewConfig(role string) *Config {
     SerfConf:     sc,
     JoinAddrs:    strings.Split(joinaddrs, ","),
     JoinReplay:   (joinreplay == "true" || joinreplay == "True" || joinreplay == "TRUE"),
+    Teams:        strings.Split(teams, ","),
     ExpectNodes:  3,
     Timeout:      10,
   }

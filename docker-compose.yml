@@ -13,6 +13,12 @@ services:
       - "3"
       - "-tag"
       - "role=ctrl"
+      - "-team"
+      - "blue"
+      - "-team"
+      - "red"
+      - "-team"
+      - "green"
     networks:
       serf:
         ipv4_address: 172.20.100.11
