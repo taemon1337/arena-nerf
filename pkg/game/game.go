@@ -15,6 +15,7 @@ type GameEngine struct {
   Controller    *GameController
   EventChan     chan GameEvent
   QueryChan     chan GameQuery
+  Scoreboard    map[string]int
 }
 
 func NewGameEngine(name string) *GameEngine {
@@ -22,6 +23,7 @@ func NewGameEngine(name string) *GameEngine {
     Controller:   &GameController{Name: name},
     EventChan:    make(chan GameEvent, 0),
     QueryChan:    make(chan GameQuery, 0),
+    Scoreboard:   map[string]int{},
   }
 }
 
@@ -104,8 +106,6 @@ func (ge *GameEngine) Run(expect, timeout int) error {
     return err
   }
 
-//  scoreboard := map[string]string{} // node: winner
-
   for {
     if err := ge.SendEvent(NewGameEvent(constants.TEAM_HIT, []byte("blue:10"))); err != nil {
       return err
@@ -141,6 +141,7 @@ func (ge *GameEngine) Run(expect, timeout int) error {
     }
 
     log.Printf("SCOREBOARD: %s", totalhits)
+    ge.Scoreboard = totalhits
 
     time.Sleep(5 * time.Second)
   }

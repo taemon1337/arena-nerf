@@ -17,6 +17,8 @@ type Config struct {
   JoinReplay      bool            `yaml:"join_replay" json:"join_replay"`
   ExpectNodes     int             `yaml:"expect_nodes" json:"expect_nodes"`
   Timeout         int             `yaml:"timeout" json:"timeout"`
+  Webserver       bool            `yaml:"webserver" json:"webserver"`
+  WebAddr         string          `yaml:"webaddr" json:"webaddr"`
 }
 
 func NewConfig(role string) *Config {
@@ -42,6 +44,8 @@ func NewConfig(role string) *Config {
     Teams:        strings.Split(teams, ","),
     ExpectNodes:  3,
     Timeout:      10,
+    Webserver:    false,
+    WebAddr:      ":8080",
   }
 }
 

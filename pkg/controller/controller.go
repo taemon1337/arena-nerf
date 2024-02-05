@@ -9,6 +9,7 @@ import (
   "github.com/hashicorp/serf/serf"
 
   "github.com/taemon1337/serf-cluster/pkg/game"
+  "github.com/taemon1337/serf-cluster/pkg/server"
   "github.com/taemon1337/serf-cluster/pkg/config"
   "github.com/taemon1337/serf-cluster/pkg/constants"
   "github.com/taemon1337/serf-cluster/pkg/connector"
@@ -18,6 +19,7 @@ type Controller struct {
   conn        *connector.Connector
   conf        *config.Config
   game        *game.GameEngine
+  server      *server.Server
 }
 
 func NewController(cfg *config.Config, ge *game.GameEngine) *Controller {
@@ -25,11 +27,21 @@ func NewController(cfg *config.Config, ge *game.GameEngine) *Controller {
     conn:     connector.NewConnector(cfg),
     conf:     cfg,
     game:     ge,
+    server:   nil,
   }
 }
 
 func (c *Controller) Start() error {
   g := new(errgroup.Group)
+
+  if c.conf.Webserver {
+    c.server = server.NewServer()
+    c.Router()
+
+    g.Go(func () error {
+      return c.server.ListenAndServe(c.conf.WebAddr)
+    })
+  }
 
   err := c.conn.Connect()
   if err != nil {

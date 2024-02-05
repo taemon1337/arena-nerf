@@ -7,6 +7,7 @@ services:
       - "control"
       - "-role"
       - "ctrl"
+      - "-server"
       - "-mode"
       - "domination"
       - "-expect"
@@ -19,6 +20,8 @@ services:
       - "red"
       - "-team"
       - "green"
+    ports:
+      - 8080:8080
     networks:
       serf:
         ipv4_address: 172.20.100.11
