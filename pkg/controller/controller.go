@@ -3,6 +3,7 @@ package controller
 import (
   "log"
   "time"
+  "errors"
   "strings"
   "golang.org/x/sync/errgroup"
 
@@ -18,16 +19,16 @@ import (
 type Controller struct {
   conn        *connector.Connector
   conf        *config.Config
-  game        *game.GameEngine
   server      *server.Server
+  game        *game.GameEngine
 }
 
-func NewController(cfg *config.Config, ge *game.GameEngine) *Controller {
+func NewController(cfg *config.Config) *Controller {
   return &Controller{
     conn:     connector.NewConnector(cfg),
     conf:     cfg,
-    game:     ge,
     server:   nil,
+    game:     nil,
   }
 }
 
@@ -55,23 +56,36 @@ func (c *Controller) Start() error {
     return c.conn.Join()
   })
 
-  g.Go(func () error {
-    return c.ListenToGameEvents()
-  })
-
-  g.Go(func () error {
-    return c.game.Run(c.conf.ExpectNodes, c.conf.Timeout)
-  })
-
   return g.Wait()
 }
 
-func (c *Controller) ListenToGameEvents() error {
+func (c *Controller) RunGame(ge *game.GameEngine) error {
+  if ge != nil && ge.Active() {
+    return errors.New("already running a game, must clear current game first before running another")
+  }
+  c.game = ge
+
+  g := new(errgroup.Group)
+
+  g.Go(func () error {
+    return c.ListenToGameEvents(ge)
+  })
+
+  g.Go(func () error {
+    return ge.Run(c.conf.ExpectNodes, c.conf.Timeout)
+  })
+
+  return nil
+}
+
+func (c *Controller) ListenToGameEvents(ge *game.GameEngine) error {
   for {
     select {
-      case e := <-c.game.EventChan:
+      case e := <-ge.EventChan:
         var err error = nil
         switch e.EventName {
+          case constants.GAME_SHUTDOWN:
+            return constants.ERR_SHUTDOWN
           case constants.TEAM_ADD:
             // inject teams from config into event
             err = c.conn.UserEvent(e.EventName, []byte(strings.Join(c.conf.Teams, constants.SPLIT)), constants.COALESCE)
@@ -81,16 +95,32 @@ func (c *Controller) ListenToGameEvents() error {
         if err != nil {
           log.Printf("could not send game event %s: %s", e.EventName, err)
         }
-      case q := <-c.game.QueryChan:
-        data := map[string][]byte{}
-        resp, err := c.conn.Query(q.Query, q.Payload, &serf.QueryParam{FilterTags: q.Tags})
-        if err != nil {
-          q.Response <- game.NewGameQueryResponse(data, err)
+      case q := <-ge.QueryChan:
+        switch q.Query {
+          case constants.TEAM_QUERY:
+            // if team query, respond with all registered teams
+            data := map[string][]byte{}
+            for _, team := range c.conf.Teams {
+              data[team] = []byte{}
+            }
+            q.Response <- game.NewGameQueryResponse(data, nil)
+          case constants.RANDOM_NODE:
+            data := map[string][]byte{}
+            nodes := c.conn.Serf().Members()
+            data[nodes[0].Name] = []byte{}
+            q.Response <- game.NewGameQueryResponse(data, nil)
+          default:
+            // by default send all queries from game engine to all nodes
+            data := map[string][]byte{}
+            resp, err := c.conn.Query(q.Query, q.Payload, &serf.QueryParam{FilterTags: q.Tags})
+            if err != nil {
+              q.Response <- game.NewGameQueryResponse(data, err)
+            }
+            for r := range resp.ResponseCh() {
+              data[r.From] = r.Payload
+            }
+            q.Response <- game.NewGameQueryResponse(data, err)
         }
-        for r := range resp.ResponseCh() {
-          data[r.From] = r.Payload
-        }
-        q.Response <- game.NewGameQueryResponse(data, err)
     }
   }
 }

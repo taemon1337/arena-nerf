@@ -1,5 +1,9 @@
 package game
 
+import (
+  "fmt"
+)
+
 type GameEvent struct {
   EventName       string        `yaml:"event" json:"event"`
   Payload         []byte        `yaml:"payload" json:"payload"`
@@ -22,6 +26,10 @@ func NewGameEvent(event string, payload []byte) GameEvent {
     EventName: event,
     Payload:   payload,
   }
+}
+
+func (e GameEvent) String() string {
+  return fmt.Sprintf("%s: %s", e.EventName, string(e.Payload))
 }
 
 func NewGameQuery(query string, payload []byte, tags map[string]string) GameQuery {

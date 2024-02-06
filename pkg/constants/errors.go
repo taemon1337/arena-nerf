@@ -9,6 +9,7 @@ var (
   ERR_NO_AGENT_CONFIG = errors.New("no node agent config")
   ERR_INVALID_CONFIG = errors.New("invalid node config")
   ERR_NOT_CONNECTED = errors.New("agent not connected")
+  ERR_SHUTDOWN = errors.New("game shutdown called")
 )
 
 

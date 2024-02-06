@@ -3,7 +3,10 @@ module github.com/taemon1337/serf-cluster
 go 1.21.5
 
 require (
+	github.com/gin-gonic/gin v1.9.1
+	github.com/google/uuid v1.6.0
 	github.com/hashicorp/serf v0.10.1
+	github.com/stianeikeland/go-rpio/v4 v4.6.0
 	golang.org/x/sync v0.6.0
 )
 
@@ -17,7 +20,6 @@ require (
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
-	github.com/gin-gonic/gin v1.9.1 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.14.0 // indirect
@@ -46,7 +48,6 @@ require (
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/posener/complete v1.2.3 // indirect
 	github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529 // indirect
-	github.com/stianeikeland/go-rpio/v4 v4.6.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	golang.org/x/arch v0.3.0 // indirect

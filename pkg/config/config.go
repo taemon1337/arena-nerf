@@ -20,6 +20,7 @@ type Config struct {
   Webserver       bool            `yaml:"webserver" json:"webserver"`
   WebAddr         string          `yaml:"webaddr" json:"webaddr"`
   Sensor          bool            `yaml:"sensor" json:"sensor"`
+  Gametime        string          `yaml:"gametime" json:"gametime"`
 }
 
 func NewConfig(role string) *Config {
@@ -27,7 +28,6 @@ func NewConfig(role string) *Config {
   sc := serf.DefaultConfig()
   joinaddrs := Getenv("SERF_JOIN_ADDRS", "127.0.0.1")
   joinreplay := Getenv("SERF_JOIN_REPLAY", "") // default is false, set to 'true|True|TRUE' otherwise
-  teams := Getenv("TEAMS", "")
   ac.NodeName = Getenv("SERF_NAME", GetHostname())
   ac.BindAddr = Getenv("SERF_BIND_ADDR", "")
   ac.AdvertiseAddr = Getenv("SERF_ADVERTISE_ADDR", "")
@@ -42,12 +42,13 @@ func NewConfig(role string) *Config {
     SerfConf:     sc,
     JoinAddrs:    strings.Split(joinaddrs, ","),
     JoinReplay:   (joinreplay == "true" || joinreplay == "True" || joinreplay == "TRUE"),
-    Teams:        strings.Split(teams, ","),
+    Teams:        []string{},
     ExpectNodes:  3,
     Timeout:      10,
     Webserver:    false,
     WebAddr:      ":8080",
     Sensor:       false,
+    Gametime:     "5m",
   }
 }
 

@@ -33,7 +33,7 @@ func NewNode(cfg *config.Config) *Node {
     mode:     constants.GAME_MODE_NONE,
     state:    constants.GAME_STATE_INIT,
     sensor:   nil,
-    hits:     map[string]int{constants.TAG_ROLE_NODE: 0},
+    hits:     map[string]int{cfg.AgentConf.NodeName: 0},
     teams:    map[string]string{},
   }
 }
@@ -88,14 +88,12 @@ func (n *Node) HandleEvent(evt serf.Event) {
         n.state = constants.GAME_STATE_ACTIVE
       case constants.GAME_ACTION_END:
         n.state = constants.GAME_STATE_OVER
-      case constants.NODE_HIT:
-        hits, err := strconv.Atoi(string(e.Payload))
-        if err != nil {
-          log.Printf("cannot parse node hit count from %s: %s", string(e.Payload), err)
-        } else {
-          n.hits[constants.TAG_ROLE_NODE] += hits
+      case n.NodeEventName(constants.TEAM_HIT):
+        if n.state != constants.GAME_STATE_ACTIVE {
+          log.Printf("game is not active - no hits allowed")
+          return
         }
-      case constants.TEAM_HIT:
+
         parts := strings.Split(string(e.Payload), constants.SPLIT)
         if len(parts) < 2 {
           log.Printf("cannot parse team hit from %s - should be <team>:<count>", string(e.Payload))
@@ -105,6 +103,7 @@ func (n *Node) HandleEvent(evt serf.Event) {
             log.Printf("cannot parse team hit from %s - %s", string(e.Payload), err)
           } else {
             n.hits[parts[0]] += hits
+            n.hits[n.conf.AgentConf.NodeName] += hits
           }
         }
       case constants.TEAM_ADD:
@@ -116,8 +115,13 @@ func (n *Node) HandleEvent(evt serf.Event) {
           }
         }
       case constants.GAME_ACTION_RESET:
+        if n.state == constants.GAME_STATE_ACTIVE {
+          log.Printf("cannot reset an active game, must stop it first")
+          return
+        }
+
         n.state = constants.GAME_STATE_INIT
-        n.hits = map[string]int{constants.TAG_ROLE_NODE: 0}
+        n.hits = map[string]int{n.conf.AgentConf.NodeName: 0}
       default:
         log.Printf("warn: unrecognized event - %s", e.Name)
     }
@@ -145,4 +149,8 @@ func (n *Node) HandleEvent(evt serf.Event) {
       log.Printf("error responding to query %s: %s", q.Name, err)
     }
   }
+}
+
+func (n *Node) NodeEventName(action string) string {
+  return strings.Join([]string{n.conf.AgentConf.NodeName, action}, constants.SPLIT)
 }

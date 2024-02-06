@@ -10,6 +10,9 @@ services:
       - "-server"
       - "-mode"
       - "domination"
+      - "-start"
+      - "-gametime"
+      - "1m"
       - "-expect"
       - "3"
       - "-tag"
@@ -20,6 +23,8 @@ services:
       - "red"
       - "-team"
       - "green"
+      - "-team"
+      - "yellow"
     ports:
       - 8080:8080
     networks:
