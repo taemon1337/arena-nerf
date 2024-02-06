@@ -19,6 +19,7 @@ type Config struct {
   Timeout         int             `yaml:"timeout" json:"timeout"`
   Webserver       bool            `yaml:"webserver" json:"webserver"`
   WebAddr         string          `yaml:"webaddr" json:"webaddr"`
+  Sensor          bool            `yaml:"sensor" json:"sensor"`
 }
 
 func NewConfig(role string) *Config {
@@ -46,6 +47,7 @@ func NewConfig(role string) *Config {
     Timeout:      10,
     Webserver:    false,
     WebAddr:      ":8080",
+    Sensor:       false,
   }
 }
 

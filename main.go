@@ -27,6 +27,7 @@ func main() {
   flag.Var((*config.AppendSliceValue)(&cfg.JoinAddrs), "join", "addresses to try to join automatically and repeatable until success")
   flag.StringVar(&mode, "mode", "", "set to the desired game mode to run a game from this node (must be a control node)")
   flag.BoolVar(&cfg.Webserver, "server", cfg.Webserver, "set to true to start the web server (only on control node)")
+  flag.BoolVar(&cfg.Sensor, "sensor", cfg.Sensor, "set to true when this node is a Raspberry Pi with sensors to start sensor functions")
   flag.StringVar(&cfg.WebAddr, "addr", cfg.WebAddr, "the web server address to listen on")
   flag.Var((*config.AppendSliceValue)(&cfg.Teams), "team", "register/add a team name")
   flag.IntVar(&cfg.ExpectNodes, "expect", cfg.ExpectNodes, "set to the expected number of game nodes (not including control node) to wait for before starting the game")
@@ -48,6 +49,8 @@ func main() {
   log.Printf("Node: %s", cfg.AgentConf.NodeName)
   log.Printf("Role: %s", role)
   log.Printf("Join: %s", cfg.JoinAddrs)
+  log.Printf("Server: %s", cfg.Webserver)
+  log.Printf("Sensor: %s", cfg.Sensor)
 
   if role == constants.TAG_ROLE_CTRL {
     if mode == "" {

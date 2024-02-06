@@ -37,6 +37,7 @@ services:
       - "node1"
       - "-join"
       - "172.20.100.11"
+      - "-sensor"
     depends_on:
       - ctrl
   node2:

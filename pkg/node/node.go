@@ -13,10 +13,13 @@ import (
   "github.com/taemon1337/serf-cluster/pkg/config"
   "github.com/taemon1337/serf-cluster/pkg/constants"
   "github.com/taemon1337/serf-cluster/pkg/connector"
+  "github.com/taemon1337/serf-cluster/pkg/sensor"
 )
 
 type Node struct {
   conn          *connector.Connector
+  conf          *config.Config
+  sensor        *sensor.Sensor
   mode          string
   state         string
   hits          map[string]int
@@ -26,8 +29,10 @@ type Node struct {
 func NewNode(cfg *config.Config) *Node {
   return &Node{
     conn:     connector.NewConnector(cfg),
+    conf:     cfg,
     mode:     constants.GAME_MODE_NONE,
     state:    constants.GAME_STATE_INIT,
+    sensor:   nil,
     hits:     map[string]int{constants.TAG_ROLE_NODE: 0},
     teams:    map[string]string{},
   }
@@ -42,6 +47,15 @@ func (n *Node) Start() error {
   }
 
   n.conn.RegisterEventHandler(n)
+
+  if n.conf.Sensor {
+    log.Printf("starting %s sensor", n.conf.AgentConf.NodeName)
+    n.sensor = sensor.NewSensor(n.conf.AgentConf.NodeName)
+
+    g.Go(func () error {
+      return n.sensor.Start()
+    })
+  }
 
   g.Go(func () error {
     return n.conn.Join()
