@@ -5,6 +5,7 @@ import (
   "net/http"
   "crypto/tls"
   "github.com/gin-gonic/gin"
+  "github.com/gin-contrib/cors"
 )
 
 type Server struct {
@@ -31,6 +32,11 @@ func (s *Server) ListenAndServe(addr string) error {
 
 func NewServer() *Server {
   g := gin.Default()
+
+  g.Use(cors.New(cors.Config{
+    AllowOrigins:       []string{"http://127.0.0.1:8080"},
+    AllowCredentials:   true,
+  }))
 
   g.GET("/health", func(c *gin.Context) {
     c.JSON(200, gin.H{

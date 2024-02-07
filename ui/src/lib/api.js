@@ -6,7 +6,7 @@ export const api = (path) => {
 
 export const currentApi = {
   get: async () => {
-    const res = await api("current/stats");
+    const res = await api("/current/stats");
 		let stats = await res.json();
     return stats.stats;
   }
