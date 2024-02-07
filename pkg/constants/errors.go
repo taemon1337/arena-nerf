@@ -10,6 +10,7 @@ var (
   ERR_INVALID_CONFIG = errors.New("invalid node config")
   ERR_NOT_CONNECTED = errors.New("agent not connected")
   ERR_SHUTDOWN = errors.New("game shutdown called")
+  ERR_API_ACTIONS_NOT_ALLOWED = errors.New("no api actions are allowed")
 )
 
 

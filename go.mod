@@ -1,4 +1,4 @@
-module github.com/taemon1337/serf-cluster
+module github.com/taemon1337/arena-nerf
 
 go 1.21.5
 

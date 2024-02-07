@@ -1,4 +1,4 @@
-# Kacm UI
+# Arena Nerf UI
 
-A frontend for the kubernetes access manager.
+A frontend for viewing Arena Nerf Game Statistics
 

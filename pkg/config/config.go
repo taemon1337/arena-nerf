@@ -21,6 +21,8 @@ type Config struct {
   WebAddr         string          `yaml:"webaddr" json:"webaddr"`
   Sensor          bool            `yaml:"sensor" json:"sensor"`
   Gametime        string          `yaml:"gametime" json:"gametime"`
+  AllowApiActions bool            `yaml:"allow_api_actions" json:"allow_api_actions"`
+  Logdir          string          `yaml:"logdir" json:"logdir"`
 }
 
 func NewConfig(role string) *Config {
@@ -38,17 +40,19 @@ func NewConfig(role string) *Config {
   sc.NodeName = ac.NodeName
 
   return &Config{
-    AgentConf:    ac,
-    SerfConf:     sc,
-    JoinAddrs:    strings.Split(joinaddrs, ","),
-    JoinReplay:   (joinreplay == "true" || joinreplay == "True" || joinreplay == "TRUE"),
-    Teams:        []string{},
-    ExpectNodes:  3,
-    Timeout:      10,
-    Webserver:    false,
-    WebAddr:      ":8080",
-    Sensor:       false,
-    Gametime:     "5m",
+    AgentConf:        ac,
+    SerfConf:         sc,
+    JoinAddrs:        strings.Split(joinaddrs, ","),
+    JoinReplay:       (joinreplay == "true" || joinreplay == "True" || joinreplay == "TRUE"),
+    Teams:            []string{},
+    ExpectNodes:      3,
+    Timeout:          10,
+    Webserver:        false,
+    WebAddr:          ":8080",
+    Sensor:           false,
+    Gametime:         "5m",
+    AllowApiActions:  false,
+    Logdir:           "",
   }
 }
 

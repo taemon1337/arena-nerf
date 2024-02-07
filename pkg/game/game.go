@@ -19,7 +19,9 @@ type GameController struct {
 }
 
 type GameStats struct {
-  uuid          string          `yaml:"id" json:"id"`
+  Uuid          string          `yaml:"id" json:"id"`
+  Name          string          `yaml:"name" json:"name"`
+  Mode          string          `yaml:"mode" json:"mode"`
   StartAt       time.Time       `yaml:"start_at" json:"start_at"`
   EndAt         time.Time       `yaml:"end_at" json:"end_at"`
   Length        string          `yaml:"length" json:"length"`
@@ -36,10 +38,11 @@ type GameEngine struct {
   Controller    *GameController
   EventChan     chan GameEvent
   QueryChan     chan GameQuery
+  Logdir        string
   GameStats     *GameStats
 }
 
-func NewGameEngine(name string, cfg *config.Config) *GameEngine {
+func NewGameEngine(name, mode string, cfg *config.Config) *GameEngine {
   scoreboard := map[string]int{}
   nodeboard := map[string]int{}
   for _, team := range cfg.Teams {
@@ -50,8 +53,11 @@ func NewGameEngine(name string, cfg *config.Config) *GameEngine {
     Controller:   &GameController{Name: name},
     EventChan:    make(chan GameEvent, 0),
     QueryChan:    make(chan GameQuery, 0),
+    Logdir:       cfg.Logdir,
     GameStats:    &GameStats{
-      uuid:         uuid.New().String(),
+      Uuid:         uuid.New().String(),
+      Name:         name,
+      Mode:         mode,
       StartAt:      time.Time{},
       EndAt:        time.Time{},
       Length:       cfg.Gametime,
@@ -124,7 +130,7 @@ func (ge *GameEngine) Run(expect, timeout int) error {
 
   // set game mode
   log.Printf("setting game mode")
-  if err = ge.SendEvent(NewGameEvent(constants.GAME_MODE, []byte(constants.GAME_MODE_DOMINATION))); err != nil {
+  if err = ge.SendEvent(NewGameEvent(constants.GAME_MODE, []byte(ge.GameStats.Mode))); err != nil {
     return err
   }
 
@@ -223,6 +229,15 @@ func (ge *GameEngine) EndGame() error {
   if err := ge.SendEvent(NewGameEvent(constants.TEAM_WINNER, []byte(winner))); err != nil {
     log.Printf("error sending team winner: %s", err)
     return err
+  }
+
+  if ge.Logdir != "" {
+    err := ge.Logstats()
+    if err != nil {
+      log.Printf("could not write game log: %s", err)
+    } else {
+      log.Printf("saved game log to %s", ge.Logfile())
+    }
   }
 
   time.Sleep(10 * time.Second) // wait before returning

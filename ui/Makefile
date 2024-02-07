@@ -1,7 +1,7 @@
 IMAGE_REPO ?= taemon1337/arena-game
 IMAGE_TAG ?= 0.0.1
 DEV_IMAGE ?= arena-game-ui:dev
-NET ?= serf-cluster_serf
+NET ?= arena-nerf_serf
 PORT ?= 8080
 HOST ?= $(shell hostname -f)
 UID ?= $(shell id -u)

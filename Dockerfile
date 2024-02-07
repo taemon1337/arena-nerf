@@ -4,10 +4,10 @@ WORKDIR /app
 
 COPY . ./
 
-RUN CGO_ENABLED=0 GOOS=linux go build -mod vendor -o /serf-cluster
+RUN CGO_ENABLED=0 GOOS=linux go build -mod vendor -o /arena-nerf
 
 FROM gcr.io/distroless/static-debian12
 
-COPY --from=builder /serf-cluster /
+COPY --from=builder /arena-nerf /
 
-ENTRYPOINT ["/serf-cluster"]
+ENTRYPOINT ["/arena-nerf"]
