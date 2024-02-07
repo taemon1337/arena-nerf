@@ -6,12 +6,12 @@ export const api = (path) => {
   return fetch(API + path, { credentials: 'include' })
 }
 
-export const currentStats = writable({
+export const currentGame = writable({
   start_at: "",
   end_at: "",
-  length: "5m",
+  length: "",
   completed: false,
-  status: "game:init",
+  status: "no active game",
   teams: [],
   nodes: [],
   events: [],
@@ -19,23 +19,41 @@ export const currentStats = writable({
   scoreboard: {},
 })
 
-export async function fetchStats(id) {
-  const res = await api("/" + id + "/stats")
+export const gamelist = writable([])
+
+export async function fetchGame(id) {
+  const res = await api("/games/" + id)
   let data = await res.json()
   if (data.stats) {
-    currentStats.update(() => data.stats)
+    currentGame.update(() => data.stats)  // games/:uuid returns {stats:{}}
+  } else if (data.games) {
+    gamelist.update(() => data.games) // games/all returns {games:[]}
   } else {
     console.error("Unexpected API response, expected a 'stats' key.", data)
   }
 }
 
-let poller;
+export async function fetchGames() {
+  return fetchGame("all")
+}
 
-export const pollStats = function(id) {
+let poller;
+let pollgames;
+
+export const pollGame = function(id) {
   if (poller) {
     clearInterval(poller)
   }
   poller = setInterval(function() {
-    fetchStats(id)
+    fetchGame(id)
+  }, 5000)
+}
+
+export const pollGames = function() {
+  if (pollgames) {
+    clearInterval(pollgames)
+  }
+  pollgames = setInterval(function() {
+    fetchGame("all")
   }, 5000)
 }

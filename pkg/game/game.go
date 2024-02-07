@@ -10,8 +10,8 @@ import (
   "math/rand"
   "encoding/json"
   "github.com/google/uuid"
-  "github.com/taemon1337/serf-cluster/pkg/constants"
-  "github.com/taemon1337/serf-cluster/pkg/config"
+  "github.com/taemon1337/arena-nerf/pkg/constants"
+  "github.com/taemon1337/arena-nerf/pkg/config"
 )
 
 type GameController struct {
@@ -35,11 +35,11 @@ type GameStats struct {
 }
 
 type GameEngine struct {
-  Controller    *GameController
-  EventChan     chan GameEvent
-  QueryChan     chan GameQuery
-  Logdir        string
-  GameStats     *GameStats
+  Controller    *GameController `yaml:"-" json:"-"`
+  EventChan     chan GameEvent  `yaml:"-" json:"-"`
+  QueryChan     chan GameQuery  `yaml:"-" json:"-"`
+  Logdir        string          `yaml:"-" json:"-"`
+  GameStats     *GameStats      `yaml:"stats" json:"stats"`
 }
 
 func NewGameEngine(name, mode string, cfg *config.Config) *GameEngine {

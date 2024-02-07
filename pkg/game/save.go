@@ -11,7 +11,7 @@ func (ge *GameEngine) Logfile() string {
 }
 
 func (ge *GameEngine) Logstats() error {
-  data, err := json.Marshal(ge.GameStats)
+  data, err := json.Marshal(ge)
   if err != nil {
     return err
   }

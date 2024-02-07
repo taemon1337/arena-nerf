@@ -1,7 +1,7 @@
 version: "3"
 services:
   ctrl:
-    image: taemon1337/serf-cluster:0.0.1
+    image: taemon1337/arena-nerf:0.0.1
     command:
       - "-name"
       - "control"
@@ -11,6 +11,8 @@ services:
       - "-mode"
       - "domination"
       - "-start"
+      - "-logdir"
+      - "/tmp/logs"
       - "-gametime"
       - "1m"
       - "-expect"
@@ -25,13 +27,15 @@ services:
       - "green"
       - "-team"
       - "yellow"
+    volumes:
+      - ./logs:/tmp/logs:rw
     ports:
       - 8000:8080
     networks:
       serf:
         ipv4_address: 172.20.100.11
   node1:
-    image: taemon1337/serf-cluster:0.0.1
+    image: taemon1337/arena-nerf:0.0.1
     networks:
       serf:
         ipv4_address: 172.20.100.1
@@ -46,7 +50,7 @@ services:
     depends_on:
       - ctrl
   node2:
-    image: taemon1337/serf-cluster:0.0.1
+    image: taemon1337/arena-nerf:0.0.1
     command:
       - "-name"
       - "node2"
@@ -60,7 +64,7 @@ services:
     depends_on:
       - ctrl
   node3:
-    image: taemon1337/serf-cluster:0.0.1
+    image: taemon1337/arena-nerf:0.0.1
     environment:
       - SERF_NAME=node3
       - SERF_ROLE=node

@@ -1,4 +1,4 @@
-IMAGE ?= taemon1337/serf-cluster
+IMAGE ?= taemon1337/arena-nerf
 VERSION ?= 0.0.1
 
 build:

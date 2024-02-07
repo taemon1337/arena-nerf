@@ -3,7 +3,7 @@ package sensor
 import (
   "log"
   "time"
-  "github.com/taemon1337/serf-cluster/pkg/game"
+  "github.com/taemon1337/arena-nerf/pkg/game"
   "github.com/stianeikeland/go-rpio/v4"
 )
 

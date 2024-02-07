@@ -9,11 +9,11 @@ import (
 
   "github.com/hashicorp/serf/serf"
 
-  "github.com/taemon1337/serf-cluster/pkg/game"
-  "github.com/taemon1337/serf-cluster/pkg/server"
-  "github.com/taemon1337/serf-cluster/pkg/config"
-  "github.com/taemon1337/serf-cluster/pkg/constants"
-  "github.com/taemon1337/serf-cluster/pkg/connector"
+  "github.com/taemon1337/arena-nerf/pkg/game"
+  "github.com/taemon1337/arena-nerf/pkg/server"
+  "github.com/taemon1337/arena-nerf/pkg/config"
+  "github.com/taemon1337/arena-nerf/pkg/constants"
+  "github.com/taemon1337/arena-nerf/pkg/connector"
 )
 
 type Controller struct {

@@ -10,10 +10,10 @@ import (
 
   "github.com/hashicorp/serf/serf"
 
-  "github.com/taemon1337/serf-cluster/pkg/config"
-  "github.com/taemon1337/serf-cluster/pkg/constants"
-  "github.com/taemon1337/serf-cluster/pkg/connector"
-  "github.com/taemon1337/serf-cluster/pkg/sensor"
+  "github.com/taemon1337/arena-nerf/pkg/config"
+  "github.com/taemon1337/arena-nerf/pkg/constants"
+  "github.com/taemon1337/arena-nerf/pkg/connector"
+  "github.com/taemon1337/arena-nerf/pkg/sensor"
 )
 
 type Node struct {

@@ -7,11 +7,11 @@ import (
   "flag"
 
   "golang.org/x/sync/errgroup"
-  "github.com/taemon1337/serf-cluster/pkg/game"
-  "github.com/taemon1337/serf-cluster/pkg/node"
-  "github.com/taemon1337/serf-cluster/pkg/config"
-  "github.com/taemon1337/serf-cluster/pkg/constants"
-  "github.com/taemon1337/serf-cluster/pkg/controller"
+  "github.com/taemon1337/arena-nerf/pkg/game"
+  "github.com/taemon1337/arena-nerf/pkg/node"
+  "github.com/taemon1337/arena-nerf/pkg/config"
+  "github.com/taemon1337/arena-nerf/pkg/constants"
+  "github.com/taemon1337/arena-nerf/pkg/controller"
 )
 
 func main() {

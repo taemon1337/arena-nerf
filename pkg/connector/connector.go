@@ -7,8 +7,8 @@ import (
   "github.com/hashicorp/serf/serf"
   "github.com/hashicorp/serf/cmd/serf/command/agent"
 
-  "github.com/taemon1337/serf-cluster/pkg/config"
-  "github.com/taemon1337/serf-cluster/pkg/constants"
+  "github.com/taemon1337/arena-nerf/pkg/config"
+  "github.com/taemon1337/arena-nerf/pkg/constants"
 )
 
 type Connector struct {
