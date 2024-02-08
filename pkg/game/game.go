@@ -4,7 +4,6 @@ import (
   "log"
   "fmt"
   "time"
-  "errors"
   "strings"
   "slices"
   "math/rand"
@@ -79,14 +78,14 @@ func (ge *GameEngine) Active() bool {
   return ge.GameStats.Completed
 }
 
+func (ge *GameEngine) SendAction(action, payload string) error {
+  return ge.SendEvent(NewGameEvent(action, []byte(payload)))
+}
+
 func (ge *GameEngine) SendEvent(e GameEvent) error {
   ge.EventChan <- e
   ge.GameStats.Events = append(ge.GameStats.Events, e.String())
   return nil
-}
-
-func (ge *GameEngine) Send(evt string, payload string) error {
-  return ge.SendEvent(NewGameEvent(evt, []byte(payload)))
 }
 
 func (ge *GameEngine) SendQuery(q GameQuery) (map[string][]byte, error) {
@@ -241,9 +240,7 @@ func (ge *GameEngine) EndGame() error {
     }
   }
 
-  time.Sleep(10 * time.Second) // wait before returning
-
-  return errors.New("the game has ended.")
+  return nil
 }
 
 func (ge *GameEngine) GetScoreboard() (map[string]int, map[string]int, error) {

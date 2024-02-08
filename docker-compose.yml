@@ -11,6 +11,7 @@ services:
       - "-mode"
       - "domination"
       - "-start"
+      - "-allow-api-actions"
       - "-logdir"
       - "/tmp/logs"
       - "-gametime"

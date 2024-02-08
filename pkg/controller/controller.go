@@ -75,7 +75,7 @@ func (c *Controller) RunGame(ge *game.GameEngine) error {
     return ge.Run(c.conf.ExpectNodes, c.conf.Timeout)
   })
 
-  return nil
+  return g.Wait()
 }
 
 func (c *Controller) ListenToGameEvents(ge *game.GameEngine) error {

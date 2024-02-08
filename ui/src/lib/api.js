@@ -7,7 +7,7 @@ export const api = (path) => {
 }
 
 export const sendaction = (action, payload) => {
-  return fetch("/do/"+action, {
+  return fetch(API + "/do/"+encodeURIComponent(action), {
     method: "POST",
     credentials: 'include',
     body: JSON.stringify(payload)

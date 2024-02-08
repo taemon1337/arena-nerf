@@ -5,24 +5,25 @@
 </script>
 
 <div>
-  <Heading tag="h1" class="mb-4 dark:text-gray-400" customSize="text-4xl font-extrabold  md:text-5xl lg:text-6xl">
-    {#if uuid == "current"}
-      Current Game Stats
-    {:else}
-      Game Stats
-      <Badge class="m-2 p-2">{uuid}</Badge>
-    {/if}
-    <Badge color="green">{$currentGame.status}</Badge>
+  <div>
+    <Heading tag="h1" class="mb-4 dark:text-gray-400" customSize="text-4xl font-extrabold  md:text-5xl lg:text-6xl">
+      {#if uuid == "current"}
+        Current Game Stats
+      {:else}
+        Game Stats
+      {/if}
+      <Badge color="green">{$currentGame.status}</Badge>
     {#if $currentGame.winner}
-    <Badge class="relative m-2 p-2" color={$currentGame.winner}>
-      winner: {$currentGame.winner}
-      <Indicator color="{$currentGame.winner}" border size="xl" placement="top-right">
-        <span class="text-white text-xs font-bold">{$currentGame.highscore}</span>
-      </Indicator>
-    </Badge>
-    {/if}
+      <Badge class="relative m-2 p-2" color={$currentGame.winner}>
+        winner: {$currentGame.winner}
+        <Indicator color="{$currentGame.winner}" border size="xl" placement="top-right">
+          <span class="text-white text-xs font-bold">{$currentGame.highscore}</span>
+        </Indicator>
+      </Badge>
+      {/if}
+    </Heading>
+  </div>
 
-  </Heading>
   <Table striped={true}>
     <TableHead>
       <TableHeadCell></TableHeadCell>

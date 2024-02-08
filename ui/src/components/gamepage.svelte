@@ -4,6 +4,8 @@
   import GameHistoryTable from '$src/components/game-history-table.svelte'
   import GameTeams from '$src/components/game-teams.svelte'
   import GameNodes from '$src/components/game-nodes.svelte'
+  import GameActions from '$src/components/game-actions.svelte'
+  import GameStats from '$src/components/game-stats.svelte'
   import Scoreboard from '$src/components/scoreboard.svelte'
   import { onMount } from 'svelte'
   import { currentGame, gamelist, pollGame, pollGames, fetchGame } from '$lib/api'
@@ -28,27 +30,13 @@
   <div class="row-span-3 col-span-3">
     <GameTeams />
     <GameNodes />
-
-    <p>Started {$currentGame.start_at}</p>
-    {#if $currentGame.completed}
-    <p>Ended {$currentGame.end_at}</p>
-    {:else}
-    <p>In progress</p>
-    {/if}
-
-    <GameHistoryTable />
+    <GameStats />
+    <GameHistoryTable uuid={uuid} />
   </div>
 
   <div class="col-span-6 grid-rows-3">
     <Scoreboard uuid={uuid} />
-    <ButtonGroup class="space-x-px">
-      {#if $currentGame.completed}
-      <GradientButton color="purpleToBlue">New Game</GradientButton>
-      {:else}
-      <GradientButton color="purpleToBlue">Stop Game</GradientButton>
-      {/if}
-      <GradientButton color="cyanToBlue">Settings</GradientButton>
-    </ButtonGroup>
+    <GameActions />
   </div>
   <div class="row-span-2 col-span-3">
     <GameEventsTable />
