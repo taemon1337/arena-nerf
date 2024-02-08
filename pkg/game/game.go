@@ -32,6 +32,8 @@ type GameStats struct {
   Nodes         []string        `yaml:"nodes" json:"nodes"`
   Nodeboard     map[string]int  `yaml:"nodeboard" json:"nodeboard"`
   Scoreboard    map[string]int  `yaml:"scoreboard" json:"scoreboard"`
+  Winner        string          `yaml:"winner" json:"winner"`
+  Highscore     int             `yaml:"highscore" json:"highscore"`
 }
 
 type GameEngine struct {
@@ -67,6 +69,8 @@ func NewGameEngine(name, mode string, cfg *config.Config) *GameEngine {
       Nodes:        []string{},
       Nodeboard:    nodeboard,
       Scoreboard:   scoreboard,
+      Winner:       "",
+      Highscore:    0,
     },
   }
 }
@@ -214,19 +218,16 @@ func (ge *GameEngine) EndGame() error {
   ge.GameStats.Nodeboard = nodeboard
   log.Printf("Final Score: %s", scoreboard)
 
-  winner := ""
-  highscore := 0
-
   for team, count := range scoreboard {
-    if count > highscore {
-      winner = team
-      highscore = count
+    if count > ge.GameStats.Highscore {
+      ge.GameStats.Winner = team
+      ge.GameStats.Highscore = count
     }
   }
 
-  log.Printf("The winning team is %s with a score of %d", winner, highscore)
+  log.Printf("The winning team is %s with a score of %d", ge.GameStats.Winner, ge.GameStats.Highscore)
 
-  if err := ge.SendEvent(NewGameEvent(constants.TEAM_WINNER, []byte(winner))); err != nil {
+  if err := ge.SendEvent(NewGameEvent(constants.TEAM_WINNER, []byte(ge.GameStats.Winner))); err != nil {
     log.Printf("error sending team winner: %s", err)
     return err
   }

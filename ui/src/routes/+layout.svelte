@@ -1,6 +1,15 @@
 <script>
 	import '../app.postcss';
+  import { fetchGame } from '$lib/api'
+  import { beforeNavigate } from '$app/navigation'
   import { Navbar, NavBrand, NavLi, NavUl, NavHamburger, DarkMode} from 'flowbite-svelte'
+
+  beforeNavigate(async ({ to, cancel }) => {
+    if (to?.params?.uuid) {
+      console.log('fetching ', to.params.uuid)
+      fetchGame(to.params.uuid)
+    }
+  })
 
   let btnClass="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2"
 </script>

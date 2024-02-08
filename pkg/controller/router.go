@@ -11,7 +11,7 @@ import (
 )
 
 type PayloadForm struct {
-  Payload       string      `form:"payload"`
+  Payload       string      `yaml:"payload" json:"payload"`
 }
 
 func (ctrl *Controller) Router() {
@@ -63,7 +63,7 @@ func (ctrl *Controller) ApiAction() func (*gin.Context) {
     var payForm PayloadForm
     err := constants.ERR_API_ACTIONS_NOT_ALLOWED
     if ctrl.conf.AllowApiActions {
-      c.ShouldBind(&payForm)
+      c.ShouldBindJSON(&payForm)
       err = ctrl.game.Send(c.Param("action"), payForm.Payload)
     }
 

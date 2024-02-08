@@ -3,4 +3,4 @@
   import GamePage from '$src/components/gamepage.svelte'
 </script>
 
-<GamePage uuid="{data.uuid}"></GamePage>
+<GamePage uuid={data.uuid}></GamePage>
