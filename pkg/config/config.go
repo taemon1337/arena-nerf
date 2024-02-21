@@ -12,6 +12,7 @@ import (
 type Config struct {
   AgentConf       *agent.Config   `yaml:"agent_conf" json:"agent_conf"`
   SerfConf        *serf.Config    `yaml:"serf_conf" json:"serf_conf"`
+  SensorConf      *SensorConfig   `yaml:"sensor_conf" json:"sensor_conf"`
   JoinAddrs       []string        `yaml:"join_addrs" json:"join_addrs"`
   Teams           []string        `yaml:"teams" json:"teams"`
   JoinReplay      bool            `yaml:"join_replay" json:"join_replay"`
@@ -19,7 +20,7 @@ type Config struct {
   Timeout         int             `yaml:"timeout" json:"timeout"`
   Webserver       bool            `yaml:"webserver" json:"webserver"`
   WebAddr         string          `yaml:"webaddr" json:"webaddr"`
-  Sensor          bool            `yaml:"sensor" json:"sensor"`
+  Sensor          string          `yaml:"sensor" json:"sensor"`
   Gametime        string          `yaml:"gametime" json:"gametime"`
   AllowApiActions bool            `yaml:"allow_api_actions" json:"allow_api_actions"`
   Logdir          string          `yaml:"logdir" json:"logdir"`
@@ -42,6 +43,7 @@ func NewConfig(role string) *Config {
   return &Config{
     AgentConf:        ac,
     SerfConf:         sc,
+    SensorConf:       nil,
     JoinAddrs:        strings.Split(joinaddrs, ","),
     JoinReplay:       (joinreplay == "true" || joinreplay == "True" || joinreplay == "TRUE"),
     Teams:            []string{},
@@ -49,7 +51,7 @@ func NewConfig(role string) *Config {
     Timeout:          10,
     Webserver:        false,
     WebAddr:          ":8080",
-    Sensor:           false,
+    Sensor:           "",
     Gametime:         "5m",
     AllowApiActions:  false,
     Logdir:           "",

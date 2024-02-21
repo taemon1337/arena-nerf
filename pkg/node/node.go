@@ -48,9 +48,9 @@ func (n *Node) Start() error {
 
   n.conn.RegisterEventHandler(n)
 
-  if n.conf.Sensor {
+  if n.conf.Sensor != "" {
     log.Printf("starting %s sensor", n.conf.AgentConf.NodeName)
-    n.sensor = sensor.NewSensor(n.conf.AgentConf.NodeName)
+    n.sensor = sensor.NewSensor(n.conf.AgentConf.NodeName, n.conf.SensorConf)
 
     g.Go(func () error {
       return n.sensor.Start()
