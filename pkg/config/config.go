@@ -20,7 +20,6 @@ type Config struct {
   Timeout         int             `yaml:"timeout" json:"timeout"`
   Webserver       bool            `yaml:"webserver" json:"webserver"`
   WebAddr         string          `yaml:"webaddr" json:"webaddr"`
-  Sensor          string          `yaml:"sensor" json:"sensor"`
   Gametime        string          `yaml:"gametime" json:"gametime"`
   AllowApiActions bool            `yaml:"allow_api_actions" json:"allow_api_actions"`
   Logdir          string          `yaml:"logdir" json:"logdir"`
@@ -32,18 +31,15 @@ func NewConfig(role string) *Config {
   joinaddrs := Getenv("SERF_JOIN_ADDRS", "127.0.0.1")
   joinreplay := Getenv("SERF_JOIN_REPLAY", "") // default is false, set to 'true|True|TRUE' otherwise
   ac.NodeName = Getenv("SERF_NAME", GetHostname())
-  ac.BindAddr = Getenv("SERF_BIND_ADDR", "")
+  ac.BindAddr = Getenv("SERF_BIND_ADDR", "0.0.0.0")
   ac.AdvertiseAddr = Getenv("SERF_ADVERTISE_ADDR", "")
   ac.EncryptKey = Getenv("SERF_ENCRYPT_KEY", "")
   ac.Tags["role"] = Getenv("SERF_ROLE", role) // role is stored as tag
 
-  sc.Tags = ac.Tags
-  sc.NodeName = ac.NodeName
-
   return &Config{
     AgentConf:        ac,
     SerfConf:         sc,
-    SensorConf:       nil,
+    SensorConf:       DefaultSensorConfig(),
     JoinAddrs:        strings.Split(joinaddrs, ","),
     JoinReplay:       (joinreplay == "true" || joinreplay == "True" || joinreplay == "TRUE"),
     Teams:            []string{},
@@ -51,11 +47,58 @@ func NewConfig(role string) *Config {
     Timeout:          10,
     Webserver:        false,
     WebAddr:          ":8080",
-    Sensor:           "",
     Gametime:         "5m",
     AllowApiActions:  false,
     Logdir:           "",
   }
+}
+
+func (c *Config) Validate() error {
+  ac := c.AgentConf
+  sc := c.SerfConf
+
+  var bindIP string
+  var bindPort int
+  var advertIP string
+  var advertPort int
+  var err error
+
+  if ac.BindAddr != "" {
+    bindIP, bindPort, err = ac.AddrParts(ac.BindAddr)
+    if err != nil {
+      return err
+    }
+  }
+
+  if ac.AdvertiseAddr != "" {
+    advertIP, advertPort, err = ac.AddrParts(ac.AdvertiseAddr)
+    if err != nil {
+      return err
+    }
+  }
+
+  encryptKey, err := ac.EncryptBytes()
+  if err != nil {
+    return err
+  }
+
+  // https://github.com/hashicorp/serf/blob/master/cmd/serf/command/agent/command.go#L320
+  sc.Tags = ac.Tags
+  sc.NodeName = ac.NodeName
+  sc.MemberlistConfig.BindAddr = bindIP
+  sc.MemberlistConfig.BindPort = bindPort
+  sc.MemberlistConfig.AdvertiseAddr = advertIP
+  sc.MemberlistConfig.AdvertisePort = advertPort
+  sc.MemberlistConfig.SecretKey = encryptKey
+  sc.ProtocolVersion = uint8(ac.Protocol)
+  sc.SnapshotPath = ac.SnapshotPath
+  sc.MemberlistConfig.EnableCompression = ac.EnableCompression
+  sc.QuerySizeLimit = ac.QuerySizeLimit
+  sc.UserEventSizeLimit = ac.UserEventSizeLimit
+  sc.EnableNameConflictResolution = !ac.DisableNameResolution
+  sc.RejoinAfterLeave = ac.RejoinAfterLeave
+
+  return nil
 }
 
 func Getenv(key, val string) string {

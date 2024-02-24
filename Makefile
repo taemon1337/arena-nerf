@@ -15,3 +15,24 @@ docker-push:
 
 docker-up:
 	docker compose up
+
+controller:
+	docker run --rm -it \
+    -v ./logs:/tmp/logs:rw \
+		--net host \
+		${IMAGE}:${VERSION} \
+		-name control \
+		-role ctrl \
+		-server \
+		-mode domination \
+		-start \
+		-allow-api-actions \
+		-logdir /tmp/logs \
+		-gametime 1m \
+		-expect 4 \
+		-tag role=ctrl \
+		-team blue \
+		-team red \
+		-team green \
+		-team yellow
+

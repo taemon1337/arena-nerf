@@ -2,17 +2,14 @@ version: "3"
 services:
   ctrl:
     image: taemon1337/arena-nerf:0.0.1
-    network_mode: "host"
     command:
       - "-name"
       - "control"
       - "-role"
       - "ctrl"
-      - "-advertise"
-      - "arena:7946"
       - "-server"
       - "-addr"
-      - "0.0.0.0:8000"
+      - ":8000"
       - "-mode"
       - "domination"
       - "-start"
@@ -36,63 +33,56 @@ services:
     volumes:
       - ./logs:/tmp/logs:rw
     ports:
-      - 7946:7946
+      - 7946:7946/tcp
+      - 7946:7946/udp
       - 8000:8000
+    networks:
+      serf:
+        ipv4_address: 172.20.100.11
   node1:
     image: taemon1337/arena-nerf:0.0.1
-    network_mode: "host"
+    networks:
+      serf:
+        ipv4_address: 172.20.100.1
     command:
       - "-role"
       - "node"
       - "-name"
       - "node1"
       - "-join"
-      - "arena:7946"
-      - "-bind"
-      - "0.0.0.0:7947"
-      - "-advertise"
-      - "arena:7947"
+      - "172.20.100.11"
     depends_on:
       - ctrl
-    ports:
-      - 7947:7947
   node2:
     image: taemon1337/arena-nerf:0.0.1
-    network_mode: "host"
     command:
       - "-name"
       - "node2"
       - "-role"
       - "node"
       - "-join"
-      - "arena:7946"
-      - "-bind"
-      - "0.0.0.0:7948"
-      - "-advertise"
-      - "arena:7948"
+      - "172.20.100.11"
+    networks:
+      serf:
+        ipv4_address: 172.20.100.2
     depends_on:
       - ctrl
-    ports:
-      - 7948:7948
   node3:
     image: taemon1337/arena-nerf:0.0.1
-    network_mode: "host"
     environment:
       - SERF_NAME=node3
       - SERF_ROLE=node
-      - SERF_JOIN_ADDRS=arena:7946
-      - SERF_BIND_ADDR=0.0.0.0:7949
-      - SERF_ADVERTISE_ADDR=arena:7949
+      - SERF_JOIN_ADDRS=172.20.100.11
+    networks:
+      serf:
+        ipv4_address: 172.20.100.3
     depends_on:
       - ctrl
-    ports:
-      - 7949:7949
-  test:
-    image: curlimages/curl:8.1.2
-    network_mode: "host"
-    command:
-      - sh
-      - "-c"
-      - "while true; do sleep 100; done"
-    depends_on:
-      - ctrl
+networks:
+  serf:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.20.0.0/16
+        gateway: 172.20.0.1

@@ -46,10 +46,16 @@ func (ctrl *Controller) ApiGameStats() func (*gin.Context) {
         })
         return
       case "current":
-        // send current game stats
-        c.JSON(http.StatusOK, gin.H{
-          "stats": ctrl.game.GameStats,
-        })
+        if ctrl.game == nil {
+          c.JSON(http.StatusOK, gin.H{
+            "msg": "no active game",
+          })
+        } else {
+          // send current game stats
+          c.JSON(http.StatusOK, gin.H{
+            "stats": ctrl.game.GameStats,
+          })
+        }
         return
       default:
         // send archived log file

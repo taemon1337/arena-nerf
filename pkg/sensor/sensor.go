@@ -1,14 +1,14 @@
 package sensor
 
 import (
-  "os"
   "log"
   "sync"
   "time"
-  "syscall"
-  "os/signal"
+  "strconv"
+  "strings"
   "github.com/taemon1337/arena-nerf/pkg/game"
   "github.com/taemon1337/arena-nerf/pkg/config"
+  "github.com/taemon1337/arena-nerf/pkg/constants"
   "github.com/taemon1337/gpiod"
 )
 
@@ -21,8 +21,9 @@ var (
 type Sensor struct {
   id        string
   conf      *config.SensorConfig
-  emit      chan game.GameEvent
-  listen    chan game.GameEvent
+  led       *gpiod.Line
+  hit       *gpiod.Line
+  gamechan  chan game.GameEvent
   hitchan   chan gpiod.LineEvent
   hitlock   sync.Mutex
   hittime   time.Time
@@ -32,9 +33,10 @@ func NewSensor(id string, cfg *config.SensorConfig) *Sensor {
   return &Sensor{
     id:       id,
     conf:     cfg,
-    emit:     make(chan game.GameEvent),
-    listen:   make(chan game.GameEvent),
-    hitchan:  make(chan gpiod.LineEvent),
+    led:      nil,
+    hit:      nil,
+    gamechan: make(chan game.GameEvent, 2),
+    hitchan:  make(chan gpiod.LineEvent, 6),
     hitlock:  sync.Mutex{},
     hittime:  time.Now(),
   }
@@ -54,30 +56,47 @@ func (s *Sensor) ProcessEvent(evt gpiod.LineEvent) {
 }
 
 func (s *Sensor) Start() error {
-  echan := make(chan gpiod.LineEvent, 6)
+  ledpin, err := s.ParseGpioPin(s.conf.LedPin)
+  if err != nil {
+    return err
+  }
+
+  hitpin, err := s.ParseGpioPin(s.conf.HitPin)
+  if err != nil {
+    return err
+  }
+
+  log.Printf("Sensor Hit pin: %d, LED pin: %d", hitpin, ledpin)
 
   // event channel buffer
   eh := func(evt gpiod.LineEvent) {
     select {
-    case echan <- evt:
+    case s.hitchan <- evt:
     default:
       log.Printf("event chan overflow - discarding event")
     }
   }
 
-  led, err := gpiod.RequestLine(s.conf.Gpiochip, s.conf.LedPin, gpiod.AsOutput(OFF))
+  led, err := gpiod.RequestLine(s.conf.Gpiochip, ledpin, gpiod.AsOutput(OFF))
   if err != nil {
+    log.Printf("cannot request gpiod %d led line: %s", ledpin, err)
     return err
   }
 
-  hit, err := gpiod.RequestLine(s.conf.Gpiochip, s.conf.HitPin, gpiod.WithPullUp, gpiod.WithRisingEdge, gpiod.WithEventHandler(eh))
+  hit, err := gpiod.RequestLine(s.conf.Gpiochip, hitpin, gpiod.WithPullUp, gpiod.WithRisingEdge, gpiod.WithEventHandler(eh))
   if err != nil {
+    log.Printf("cannot request gpiod %d hit line: %s", hitpin, err)
     return err
   }
+
+  s.led = led
+  s.hit = hit
 
   // start by blinking led
-  s.Blink(5, led)
-  time.Sleep(2 * time.Second)
+  log.Printf("Blinking LED 5 times...")
+  time.Sleep(3 * time.Second)
+  s.Blink(5)
+  time.Sleep(1 * time.Second)
 
   defer func() {
     led.Reconfigure(gpiod.AsInput)
@@ -86,32 +105,61 @@ func (s *Sensor) Start() error {
     hit.Close()
   }()
 
-  quit := make(chan os.Signal, 1)
-  signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-  defer signal.Stop(quit)
-
   done := false
   for !done {
     select {
-    case evt := <-echan:
-      go s.ProcessEvent(evt)
-    case <-quit:
-      log.Printf("stopping...")
-      done = true
+    case evt := <-s.hitchan:
+      s.ProcessEvent(evt)
     }
   }
-  return nil
+  return constants.ERR_SENSOR_STOPPED
 }
 
-func (s *Sensor) Blink(times int, led *gpiod.Line) {
+func (s *Sensor) Listen() error {
+  for {
+    select {
+      case e := <-s.gamechan:
+        log.Printf("SENSOR GAME EVENT RECEIVED: %s", e)
+        switch e.EventName {
+          case constants.TEAM_HIT:
+            parts := strings.Split(string(e.Payload), constants.SPLIT)
+            if len(parts) < 2 {
+              log.Printf("cannot parse sensor team hit from %s - should be <team>:<count>", string(e.Payload))
+            } else {
+              hits, err := strconv.Atoi(parts[1])
+              if err != nil {
+                log.Printf("cannot parse sensor team hit from %s - %s", string(e.Payload), err)
+                continue
+              } else {
+                s.Blink(hits) // blink the number of hits times
+              }
+            }
+          default:
+            log.Printf("Sensor Received Event (no action found): %s", e)
+        }
+    }
+  }
+  return constants.ERR_SENSOR_STOPPED
+}
+
+// game event for this node read on game event channel
+func (s *Sensor) NodeTeamHit(action string, payload []byte) {
+  s.gamechan <- game.NewGameEvent(action, payload)
+}
+
+func (s *Sensor) Blink(times int) {
   for i := 0; i < times; i++ {
-    s.BlinkOnce(led)
+    s.BlinkOnce()
     time.Sleep(BLINK_DELAY)
   }
 }
 
-func (s *Sensor) BlinkOnce(led *gpiod.Line) {
-  led.SetValue(ON)
-  time.Sleep(BLINK_DELAY)
-  led.SetValue(OFF)
+func (s *Sensor) BlinkOnce() {
+  if s.led != nil {
+    s.led.SetValue(ON)
+    time.Sleep(BLINK_DELAY)
+    s.led.SetValue(OFF)
+  } else {
+    log.Printf("warn: led not setup - is nil")
+  }
 }

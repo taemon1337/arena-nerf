@@ -13,4 +13,6 @@ var (
   ERR_API_ACTIONS_NOT_ALLOWED = errors.New("no api actions are allowed")
   ERR_UI_ACTION_NOT_ALLOWED = errors.New("invalid action - only certain ui actions are allowed")
   ERR_ONGOING_GAME = errors.New("invalid action - a game is ongoing, stop the game first")
+  ERR_SENSOR_STOPPED = errors.New("sensor stopped")
+  ERR_STOP_CALLED = errors.New("stop signal received, shutting down.")
 )

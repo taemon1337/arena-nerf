@@ -112,10 +112,10 @@ func (ge *GameEngine) WaitForNodes(expect int, timeout int) error {
     }
 
     if readycount >= expect {
-      log.Printf("nodes ready: %d", len(resp))
+      log.Printf("nodes ready: %d", readycount)
       break // got expected amount node responses indicating readiness
     } else {
-      log.Printf("waiting for %d ready nodes...", expect)
+      log.Printf("waiting for %d ready nodes [%d/%d]...", expect, readycount, expect)
       time.Sleep(time.Duration(timeout))
     }
   }
@@ -172,6 +172,7 @@ func (ge *GameEngine) Run(expect, timeout int) error {
 
   for {
     select {
+      // generate random hits (for testing only, should be configurable)
       case <-time.After(2 * time.Second):
         if err := ge.RandomTeamHits(); err != nil {
           log.Printf("error sending random team hit: %s", err)

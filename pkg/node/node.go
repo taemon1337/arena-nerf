@@ -2,7 +2,6 @@ package node
 
 import (
   "log"
-  "time"
   "strconv"
   "strings"
   "encoding/json"
@@ -48,9 +47,13 @@ func (n *Node) Start() error {
 
   n.conn.RegisterEventHandler(n)
 
-  if n.conf.Sensor != "" {
-    log.Printf("starting %s sensor", n.conf.AgentConf.NodeName)
+  if n.conf.SensorConf.Device != "" {
+    log.Printf("starting %s %s sensor", n.conf.SensorConf.Device, n.conf.AgentConf.NodeName)
     n.sensor = sensor.NewSensor(n.conf.AgentConf.NodeName, n.conf.SensorConf)
+
+    g.Go(func () error {
+      return n.sensor.Listen()
+    })
 
     g.Go(func () error {
       return n.sensor.Start()
@@ -61,10 +64,6 @@ func (n *Node) Start() error {
     return n.conn.Join()
   })
 
-  g.Go(func () error {
-    return n.Listen()
-  })
-
   return g.Wait()
 }
 
@@ -72,10 +71,8 @@ func (n *Node) Ready() bool {
   return n.conn.IsConnected()
 }
 
-func (n *Node) Listen() error {
-  for {
-    time.Sleep(10 * time.Second)
-  }
+func (n *Node) HasSensor() bool {
+  return n.sensor != nil
 }
 
 func (n *Node) HandleEvent(evt serf.Event) {
@@ -104,6 +101,9 @@ func (n *Node) HandleEvent(evt serf.Event) {
           } else {
             n.hits[parts[0]] += hits
             n.hits[n.conf.AgentConf.NodeName] += hits
+            if n.HasSensor() {
+              n.sensor.NodeTeamHit(constants.TEAM_HIT, e.Payload)
+            }
           }
         }
       case constants.TEAM_ADD:

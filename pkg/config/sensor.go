@@ -1,14 +1,16 @@
 package config
 
 type SensorConfig struct {
+  Device        string
   Gpiochip      string
-  HitPin        int
-  LedPin        int
+  HitPin        string
+  LedPin        string
   Debounce      int
 }
 
-func NewSensorConfig(chip string, hitpin, ledpin, debouncetime int) *SensorConfig {
+func NewSensorConfig(device, chip, hitpin, ledpin string, debouncetime int) *SensorConfig {
   return &SensorConfig{
+    Device:       device,
     Gpiochip:     chip,
     HitPin:       hitpin,
     LedPin:       ledpin,
@@ -16,4 +18,12 @@ func NewSensorConfig(chip string, hitpin, ledpin, debouncetime int) *SensorConfi
   }
 }
 
-
+func DefaultSensorConfig() *SensorConfig {
+  return &SensorConfig{
+    Device:       "",
+    Gpiochip:     "gpiochip0",
+    HitPin:       "",
+    LedPin:       "",
+    Debounce:     100,
+  }
+}
