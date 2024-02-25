@@ -38,6 +38,7 @@ var (
 
   NODE_HIT = "node:hit"
   TEAM_HIT = "team:hit"
+  TARGET_HIT = "target:hit"
 
 
   RANDOM_NODE = "random:node"

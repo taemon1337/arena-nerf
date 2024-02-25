@@ -23,7 +23,7 @@ type Sensor struct {
   conf      *config.SensorConfig
   led       *gpiod.Line
   hit       *gpiod.Line
-  gamechan  chan game.GameEvent
+  Gamechan  chan game.GameEvent
   hitchan   chan gpiod.LineEvent
   hitlock   sync.Mutex
   hittime   time.Time
@@ -35,7 +35,7 @@ func NewSensor(id string, cfg *config.SensorConfig) *Sensor {
     conf:     cfg,
     led:      nil,
     hit:      nil,
-    gamechan: make(chan game.GameEvent, 2),
+    Gamechan: make(chan game.GameEvent, 2),
     hitchan:  make(chan gpiod.LineEvent, 6),
     hitlock:  sync.Mutex{},
     hittime:  time.Now(),
@@ -53,6 +53,8 @@ func (s *Sensor) ProcessEvent(evt gpiod.LineEvent) {
   }
 
   s.hittime = time.Now() // hittime is last debounced hit time
+  log.Printf("HIT DEBOUNCE REACHED")
+  s.Gamechan <- game.NewGameEvent(constants.TARGET_HIT, []byte("blue:1")) // blue should be replaced with current LED target color
 }
 
 func (s *Sensor) Start() error {
@@ -109,6 +111,7 @@ func (s *Sensor) Start() error {
   for !done {
     select {
     case evt := <-s.hitchan:
+      log.Printf("HIT: %s", evt)
       s.ProcessEvent(evt)
     }
   }
@@ -118,9 +121,11 @@ func (s *Sensor) Start() error {
 func (s *Sensor) Listen() error {
   for {
     select {
-      case e := <-s.gamechan:
+      case e := <-s.Gamechan:
         log.Printf("SENSOR GAME EVENT RECEIVED: %s", e)
         switch e.EventName {
+          case constants.TARGET_HIT:
+
           case constants.TEAM_HIT:
             parts := strings.Split(string(e.Payload), constants.SPLIT)
             if len(parts) < 2 {
@@ -144,7 +149,7 @@ func (s *Sensor) Listen() error {
 
 // game event for this node read on game event channel
 func (s *Sensor) NodeTeamHit(action string, payload []byte) {
-  s.gamechan <- game.NewGameEvent(action, payload)
+  s.Gamechan <- game.NewGameEvent(action, payload)
 }
 
 func (s *Sensor) Blink(times int) {

@@ -14,5 +14,6 @@ var (
   ERR_UI_ACTION_NOT_ALLOWED = errors.New("invalid action - only certain ui actions are allowed")
   ERR_ONGOING_GAME = errors.New("invalid action - a game is ongoing, stop the game first")
   ERR_SENSOR_STOPPED = errors.New("sensor stopped")
+  ERR_SENSOR_NOT_READY = errors.New("sensor not enabled or not connected to cluster")
   ERR_STOP_CALLED = errors.New("stop signal received, shutting down.")
 )

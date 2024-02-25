@@ -52,6 +52,10 @@ func (n *Node) Start() error {
     n.sensor = sensor.NewSensor(n.conf.AgentConf.NodeName, n.conf.SensorConf)
 
     g.Go(func () error {
+      return n.ListenToSensor()
+    })
+
+    g.Go(func () error {
       return n.sensor.Listen()
     })
 
@@ -73,6 +77,27 @@ func (n *Node) Ready() bool {
 
 func (n *Node) HasSensor() bool {
   return n.sensor != nil
+}
+
+func (n *Node) ListenToSensor() error {
+  if n.HasSensor() && n.Ready() {
+    for {
+      select {
+      case e := <-n.sensor.Gamechan:
+        switch e.EventName {
+          case constants.TARGET_HIT:
+            err := n.conn.UserEvent(e.EventName, e.Payload, constants.COALESCE)
+            if err != nil {
+              log.Printf("error sending sensor event to cluster: %s", err)
+            }
+          default:
+            log.Printf("skipping unauthorized/unsupported sensor event - %s", e.EventName)
+        }
+      }
+    }
+  } else {
+    return constants.ERR_SENSOR_NOT_READY
+  }
 }
 
 func (n *Node) HandleEvent(evt serf.Event) {
